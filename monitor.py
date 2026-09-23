@@ -4,6 +4,7 @@ A pagina tem uma tabela por ano-base com: nome do lote, data de publicacao e lin
 - Avisa quando aparece linha nova (lote novo) ou quando uma linha existente muda.
 - Rodando manualmente (Run workflow), manda um resumo com o ultimo lote publicado.
 - Estado em state.json; ultima pagina baixada em last_page.html (diagnostico).
+-Conferindo se esta automatico
 """
 import hashlib
 import json
