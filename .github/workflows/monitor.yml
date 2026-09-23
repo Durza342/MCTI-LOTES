@@ -2,8 +2,10 @@ name: Monitor lotes Lei do Bem
 
 on:
   schedule:
-    - cron: "*/10 * * * *"   # a cada 10 min (UTC); o GitHub pode atrasar alguns minutos
-  workflow_dispatch:          # botao "Run workflow" para testar na hora
+    - cron: "7,17,27,37,47,57 * * * *"   # agendamento do GitHub (reserva; pode atrasar)
+  repository_dispatch:
+    types: [cron]                        # chamado pelo cron-job.org a cada 10 min (silencioso)
+  workflow_dispatch:                     # botao "Run workflow": manda resumo do ultimo lote
 
 permissions:
   contents: write
