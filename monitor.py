@@ -1,4 +1,4 @@
-"""Monitora a pagina de lotes da Lei do Bem (MCTI) e avisa por Telegram e/ou email.
+"""Monitora a pagina de lotes da Lei do Bem (MCTI) e avisa por Telegram, Teams e/ou email.
 
 A pagina tem uma tabela por ano-base com: nome do lote, data de publicacao e link de download.
 - Avisa quando aparece linha nova (lote novo) ou quando uma linha existente muda.
@@ -39,24 +39,71 @@ LOTE_RE = re.compile(r"(\d{1,3})\s*[º°ªo]?\s*lote", re.I)
 
 # ---------- notificacao ----------
 
-def notify(title: str, body: str) -> None:
+def send_telegram(title: str, body: str) -> None:
     tok = os.getenv("TELEGRAM_TOKEN")
     chat = os.getenv("TELEGRAM_CHAT_ID") or "1489648434"
-    if tok and chat:
-        requests.post(
-            f"https://api.telegram.org/bot{tok}/sendMessage",
-            data={"chat_id": chat, "text": f"{title}\n\n{body}", "disable_web_page_preview": True},
-            timeout=20,
-        ).raise_for_status()
+    if not tok:
+        return
+    requests.post(
+        f"https://api.telegram.org/bot{tok}/sendMessage",
+        data={"chat_id": chat, "text": f"{title}\n\n{body}", "disable_web_page_preview": True},
+        timeout=20,
+    ).raise_for_status()
 
+
+def send_email(title: str, body: str) -> None:
     user, pwd, to = os.getenv("GMAIL_USER"), os.getenv("GMAIL_APP_PASSWORD"), os.getenv("MAIL_TO")
-    if user and pwd and to:
-        msg = EmailMessage()
-        msg["Subject"], msg["From"], msg["To"] = title, user, to
-        msg.set_content(body)
-        with smtplib.SMTP_SSL("smtp.gmail.com", 465) as s:
-            s.login(user, pwd)
-            s.send_message(msg)
+    if not (user and pwd and to):
+        return
+    msg = EmailMessage()
+    msg["Subject"], msg["From"], msg["To"] = title, user, to
+    msg.set_content(body)
+    with smtplib.SMTP_SSL("smtp.gmail.com", 465) as s:
+        s.login(user, pwd)
+        s.send_message(msg)
+
+
+def teams_card(title: str, body: str) -> dict:
+    """Adaptive Card no formato aceito pelo fluxo de webhook do Teams (app Workflows)."""
+    blocks = [{"type": "TextBlock", "text": title, "weight": "Bolder", "size": "Medium", "wrap": True}]
+    for paragraph in body.split("\n\n"):
+        text = "\n\n".join(line for line in paragraph.splitlines() if line.strip())
+        if text:
+            blocks.append({"type": "TextBlock", "text": text, "wrap": True, "spacing": "Medium"})
+    return {
+        "type": "message",
+        "attachments": [{
+            "contentType": "application/vnd.microsoft.card.adaptive",
+            "contentUrl": None,
+            "content": {
+                "$schema": "http://adaptivecards.io/schemas/adaptive-card.json",
+                "type": "AdaptiveCard",
+                "version": "1.4",
+                "body": blocks,
+                "actions": [{"type": "Action.OpenUrl", "title": "Abrir pagina de lotes", "url": URL}],
+            },
+        }],
+    }
+
+
+def send_teams(title: str, body: str) -> None:
+    hook = os.getenv("TEAMS_WEBHOOK_URL")
+    if not hook:
+        return
+    requests.post(hook, json=teams_card(title, body), timeout=30).raise_for_status()
+
+
+def notify(title: str, body: str) -> None:
+    """Envia para todos os canais configurados. Falha em um nao impede os outros."""
+    errors = []
+    for name, send in (("Telegram", send_telegram), ("Teams", send_teams), ("Email", send_email)):
+        try:
+            send(title, body)
+        except Exception as e:  # noqa: BLE001
+            errors.append(f"{name}: {e}")
+            print(f"Falha ao enviar por {name}: {e}")
+    if errors and len(errors) == 3:
+        raise RuntimeError("Nenhum canal de notificacao funcionou: " + "; ".join(errors))
 
 
 # ---------- coleta ----------
