@@ -71,6 +71,11 @@ def links_in(node) -> dict[str, str]:
     return links
 
 
+def is_relevant(url: str, text: str) -> bool:
+    u, t = url.lower(), text.lower()
+    return "lei-do-bem" in u or ".pdf" in u or "lote" in t or "parecer" in t
+
+
 def extract(html: str) -> tuple[dict[str, str], str]:
     soup = BeautifulSoup(html, "html.parser")
     title = soup.title.get_text(strip=True) if soup.title else "(sem titulo)"
@@ -84,10 +89,13 @@ def extract(html: str) -> tuple[dict[str, str], str]:
             main, used = node, sel
             break
 
-    links = links_in(main)
-    print(f"Seletor usado: {used}, {len(links)} links")
-    text = " ".join(main.get_text(" ").split())
-    return links, hashlib.sha256(text.encode()).hexdigest()
+    all_links = links_in(main)
+    # Mantem so links da Lei do Bem, PDFs ou que citam "lote"; descarta menu e rodape do gov.br.
+    links = {u: t for u, t in all_links.items() if is_relevant(u, t)}
+    print(f"Seletor usado: {used}, {len(all_links)} links no total, {len(links)} relevantes")
+    # Hash so dos links relevantes, para banners e menus nao dispararem alerta.
+    fingerprint = "\n".join(f"{u} {t}" for u, t in sorted(links.items()))
+    return links, hashlib.sha256(fingerprint.encode()).hexdigest()
 
 
 def save(state: dict) -> None:
@@ -121,7 +129,7 @@ def main() -> int:
         notify("Monitor Lei do Bem: voltou a funcionar", URL)
 
     if not old_links:
-        sample = "\n".join(f"- {t}" for t in list(links.values())[:5])
+        sample = "\n".join(f"- {t}" for t in list(links.values())[-5:])
         notify("Monitor Lei do Bem ativo", f"{len(links)} links registrados. Exemplos:\n{sample}\n\n{URL}")
     else:
         new = {u: t for u, t in links.items() if u not in old_links}
@@ -129,7 +137,7 @@ def main() -> int:
             body = "\n\n".join(f"{t}\n{u}" for u, t in new.items())
             notify(f"Lei do Bem: {len(new)} novidade(s) na pagina de lotes", f"{body}\n\nPagina: {URL}")
         elif digest != state.get("hash"):
-            notify("Lei do Bem: texto da pagina de lotes mudou", f"Nenhum link novo, mas o conteudo foi alterado:\n{URL}")
+            notify("Lei do Bem: algum link da pagina de lotes mudou", f"Nenhum link novo, mas algum titulo ou link foi alterado:\n{URL}")
 
     save({"links": links, "hash": digest, "blocked": False, "empty": False})
     return 0
