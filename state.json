@@ -6,6 +6,13 @@
     "https://www.gov.br/mcti/pt-br/acompanhe-o-mcti/lei-do-bem/paginas": "Páginas"
   },
   "hash": "d072da4edcf4e27f3ab98c36bacff121ae8700e191257ae4753a3a0efb0400a3",
+  "info": {
+    "https://www.gov.br/mcti/pt-br/acompanhe-o-mcti/lei-do-bem/paginas/lotes/pagina-lotes": {
+      "tipo": "Parecer Tecnico",
+      "detectado": "23/09/2026",
+      "sem_data": true
+    }
+  },
   "blocked": false,
   "empty": false
 }
