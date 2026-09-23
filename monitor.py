@@ -10,14 +10,20 @@ import json
 import os
 import re
 import smtplib
+import socket
 import sys
+import time
 from datetime import datetime
 from email.message import EmailMessage
 from pathlib import Path
 from urllib.parse import urljoin
 
 import requests
+import urllib3.util.connection as urllib3_conn
 from bs4 import BeautifulSoup
+
+# Forca IPv4: a rota IPv6 dos servidores do GitHub ate o gov.br as vezes falha ("Network is unreachable").
+urllib3_conn.allowed_gai_family = lambda: socket.AF_INET
 
 URL = "https://www.gov.br/mcti/pt-br/acompanhe-o-mcti/lei-do-bem/paginas/lotes"
 HERE = Path(__file__).parent
@@ -31,6 +37,8 @@ HEADERS = {
     "Accept-Language": "pt-BR,pt;q=0.9",
 }
 BLOCK_MARKERS = ("whether you are a human", "support ID is")
+FETCH_TRIES = 3          # tentativas por execucao
+FAILS_BEFORE_ALERT = 3   # execucoes seguidas com site fora antes de avisar (~30 min)
 
 DATE_RE = re.compile(r"(\d{1,2})\s*/+\s*(\d{1,2})\s*/+\s*(\d{4})")  # aceita erros tipo 14/09//2026
 ANO_RE = re.compile(r"ano[\s\-_]*base[\s\-_:]*(\d{4})", re.I)
@@ -43,6 +51,7 @@ def send_telegram(title: str, body: str) -> None:
     tok = os.getenv("TELEGRAM_TOKEN")
     chat = os.getenv("TELEGRAM_CHAT_ID") or "1489648434"
     if not tok:
+        print("Telegram: TELEGRAM_TOKEN nao configurado, pulando")
         return
     requests.post(
         f"https://api.telegram.org/bot{tok}/sendMessage",
@@ -89,8 +98,11 @@ def teams_card(title: str, body: str) -> dict:
 def send_teams(title: str, body: str) -> None:
     hook = os.getenv("TEAMS_WEBHOOK_URL")
     if not hook:
+        print("Teams: TEAMS_WEBHOOK_URL nao configurado, pulando")
         return
-    requests.post(hook, json=teams_card(title, body), timeout=30).raise_for_status()
+    r = requests.post(hook.strip(), json=teams_card(title, body), timeout=30)
+    print(f"Teams: HTTP {r.status_code} {r.text[:300]}")
+    r.raise_for_status()
 
 
 def notify(title: str, body: str) -> None:
@@ -110,7 +122,17 @@ def notify(title: str, body: str) -> None:
 
 def fetch() -> str | None:
     """Retorna o HTML da pagina de lotes, ou None se caiu no CAPTCHA."""
-    r = requests.get(URL, headers=HEADERS, timeout=30)
+    for attempt in range(1, FETCH_TRIES + 1):
+        try:
+            r = requests.get(URL, headers=HEADERS, timeout=30)
+            if r.status_code < 500:
+                break
+            print(f"Tentativa {attempt}: HTTP {r.status_code}")
+        except requests.RequestException as e:
+            print(f"Tentativa {attempt}: {e.__class__.__name__}")
+            if attempt == FETCH_TRIES:
+                raise
+        time.sleep(10)
     print(f"HTTP {r.status_code}, {len(r.text)} caracteres")
     DEBUG_HTML.write_text(r.text, encoding="utf-8")
     r.raise_for_status()
@@ -208,7 +230,20 @@ def main() -> int:
     state = json.loads(STATE.read_text(encoding="utf-8")) if STATE.exists() else {}
     manual = os.getenv("GITHUB_EVENT_NAME") == "workflow_dispatch"
 
-    html = fetch()
+    try:
+        html = fetch()
+    except requests.RequestException as e:
+        fails = state.get("fail_count", 0) + 1
+        state["fail_count"] = fails
+        print(f"Site inacessivel ({fails}a execucao seguida): {e}")
+        if fails == FAILS_BEFORE_ALERT:
+            notify("Monitor Lei do Bem: site fora do ar", f"Nao consigo acessar a pagina ha {fails} verificacoes seguidas. Aviso quando voltar.\n{URL}")
+        save(state)
+        return 0
+    if state.get("fail_count", 0) >= FAILS_BEFORE_ALERT:
+        notify("Monitor Lei do Bem: site voltou", URL)
+    state.pop("fail_count", None)
+
     if html is None:
         if not state.get("blocked"):
             notify("Monitor Lei do Bem: bloqueado", f"O site devolveu CAPTCHA. Verifique manualmente:\n{URL}")
