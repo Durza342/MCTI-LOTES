@@ -346,5 +346,6 @@
     }
   },
   "blocked": false,
-  "empty": false
+  "empty": false,
+  "fail_count": 1
 }
