@@ -176,6 +176,14 @@
       "tipo": "Parecer Tecnico",
       "url": "https://www.gov.br/mcti/pt-br/acompanhe-o-mcti/lei-do-bem/noticias/parecer-tecnico-ano-base-2024/publicacao-1o-lote-parecer-tecnico-2024.pdf"
     },
+    "https://www.gov.br/mcti/pt-br/acompanhe-o-mcti/lei-do-bem/noticias/parecer-tecnico-ano-base-2023/publicacao-4-lote-recurso-adm-2023.pdf": {
+      "nome": "4º lote do Parecer Técnico (recurso administrativo) - ANO BASE 2023",
+      "data": "09/11/2026",
+      "ano_base": "2023",
+      "lote": 4,
+      "tipo": "Recurso administrativo",
+      "url": "https://www.gov.br/mcti/pt-br/acompanhe-o-mcti/lei-do-bem/noticias/parecer-tecnico-ano-base-2023/publicacao-4-lote-recurso-adm-2023.pdf"
+    },
     "https://www.gov.br/mcti/pt-br/acompanhe-o-mcti/lei-do-bem/noticias/parecer-tecnico-ano-base-2023/publicacao-3-lote-recurso-adm-2023.pdf": {
       "nome": "3º lote do Parecer Técnico (recurso administrativo) - ANO-BASE 2023",
       "data": "29/10/2026",
@@ -215,6 +223,14 @@
       "lote": null,
       "tipo": "Parecer Tecnico",
       "url": "https://www.gov.br/mcti/pt-br/acompanhe-o-mcti/lei-do-bem/arquivo/pdf/informacoes-sobre-pareceres-tecnicos-publicacoes-anteriores2023.zip"
+    },
+    "https://www.gov.br/mcti/pt-br/acompanhe-o-mcti/lei-do-bem/noticias/parecer-tecnico-ano-base-2022/publicacao-10-lote-recurso-adm-2022.pdf": {
+      "nome": "10º lote do Parecer Técnico (recurso administrativo) - ANO-BASE 2022",
+      "data": "09/11/2026",
+      "ano_base": "2022",
+      "lote": 10,
+      "tipo": "Recurso administrativo",
+      "url": "https://www.gov.br/mcti/pt-br/acompanhe-o-mcti/lei-do-bem/noticias/parecer-tecnico-ano-base-2022/publicacao-10-lote-recurso-adm-2022.pdf"
     },
     "https://www.gov.br/mcti/pt-br/acompanhe-o-mcti/lei-do-bem/noticias/parecer-tecnico-ano-base-2022/publicacao-9-lote-recurso-adm-2022.pdf": {
       "nome": "9º lote do Parecer Técnico (recurso administrativo) - ANO-BASE 2022",
@@ -271,6 +287,14 @@
       "lote": null,
       "tipo": "Parecer Tecnico",
       "url": "https://www.gov.br/mcti/pt-br/acompanhe-o-mcti/lei-do-bem/noticias/parecer-tecnico-ano-base-2022/informacoes-sobre-parecere-tecnicos-publicacoes-anteriores_2022.zip"
+    },
+    "https://www.gov.br/mcti/pt-br/acompanhe-o-mcti/lei-do-bem/noticias/parecer-tecnico-contestacao-ano-base-2021/publicacao-13-lote-recurso-adm-2021.pdf": {
+      "nome": "13º lote do Parecer Técnico (recurso administrativo) - ANO-BASE 2021",
+      "data": "09/11/2026",
+      "ano_base": "2021",
+      "lote": 13,
+      "tipo": "Recurso administrativo",
+      "url": "https://www.gov.br/mcti/pt-br/acompanhe-o-mcti/lei-do-bem/noticias/parecer-tecnico-contestacao-ano-base-2021/publicacao-13-lote-recurso-adm-2021.pdf"
     },
     "https://www.gov.br/mcti/pt-br/acompanhe-o-mcti/lei-do-bem/noticias/parecer-tecnico-contestacao-ano-base-2021/publicacao-12-lote-recurso-adm-2021.pdf": {
       "nome": "12º lote do Parecer Técnico (recurso administrativo) - ANO-BASE 2021",
