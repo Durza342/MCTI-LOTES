@@ -482,6 +482,5 @@
     }
   },
   "blocked": false,
-  "empty": false,
-  "fail_count": 14
+  "empty": false
 }
